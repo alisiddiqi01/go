@@ -86,6 +86,13 @@ func (e *escape) stmt(n ir.Node) {
 		e.stmt(n.Post)
 		e.block(n.Body)
 		e.loopDepth--
+	
+	case ir.OWHILE:
+		n := n.(*ir.WhileStmt)
+		e.loopDepth++
+		e.discard(n.Cond)
+		e.block(n.Body)
+		e.loopDepth--
 
 	case ir.ORANGE:
 		// for Key, Value = range X { Body }

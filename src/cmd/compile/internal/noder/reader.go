@@ -1729,6 +1729,9 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 
 	case stmtFor:
 		return r.forStmt(label)
+	
+	case stmtWhile:
+		return r.whileStmt(label)
 
 	case stmtIf:
 		return r.ifStmt()
@@ -1853,6 +1856,20 @@ func (r *reader) forStmt(label *types.Sym) ir.Node {
 
 	stmt := ir.NewForStmt(pos, init, cond, post, body, perLoopVars)
 	stmt.Label = label
+	return stmt
+}
+
+func (r *reader) whileStmt(label *types.Sym) ir.Node {
+	r.Sync(pkgbits.SyncWhileStmt)
+
+	r.openScope()
+
+	pos := r.pos()
+	cond := r.optExpr()
+	body := r.blockStmt()
+	r.closeAnotherScope()
+
+	stmt := ir.NewWhileStmt(pos, cond, body)
 	return stmt
 }
 

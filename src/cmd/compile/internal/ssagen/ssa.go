@@ -1894,6 +1894,46 @@ func (s *state) stmt(n ir.Node) {
 
 		s.startBlock(bEnd)
 
+	case ir.OWHILE:
+		// OWHILE: while Left { Nbody }
+		// cond (Left); body (Nbody)
+		n := n.(*ir.WhileStmt)
+		bCond := s.f.NewBlock(ssa.BlockPlain)
+		bBody := s.f.NewBlock(ssa.BlockPlain)
+		bEnd := s.f.NewBlock(ssa.BlockPlain)
+	
+		// ensure empty while loops have correct position; issue #30167
+		bBody.Pos = n.Pos()
+	
+		// first, jump to condition test
+		b := s.endBlock()
+		b.AddEdgeTo(bCond)
+
+		// generate code to test condition
+		s.startBlock(bCond)
+		if n.Cond != nil {
+			s.condBranch(n.Cond, bBody, bEnd, 1)
+		} else {
+			b := s.endBlock()
+			b.Kind = ssa.BlockPlain
+			b.AddEdgeTo(bBody)
+		}
+
+		// generate body
+		s.startBlock(bBody)
+		s.stmtList(n.Body)
+
+		if b := s.endBlock(); b != nil {
+			b.AddEdgeTo(bCond)
+			// It can happen that bIncr ends in a block containing only VARKILL,
+			// and that muddles the debugging experience.
+			if b.Pos == src.NoXPos {
+				b.Pos = bCond.Pos
+			}
+		}
+
+		s.startBlock(bEnd)
+
 	case ir.OSWITCH, ir.OSELECT:
 		// These have been mostly rewritten by the front end into their Nbody fields.
 		// Our main task is to correctly hook up any break statements.

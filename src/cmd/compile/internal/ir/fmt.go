@@ -49,6 +49,7 @@ var OpNames = []string{
 	OEQ:               "==",
 	OFALL:             "fallthrough",
 	OFOR:              "for",
+	OWHILE:			   "while",
 	OGE:               ">=",
 	OGOTO:             "goto",
 	OGT:               ">",
@@ -279,6 +280,7 @@ var OpPrec = []int{
 	ODEFER:      -1,
 	OFALL:       -1,
 	OFOR:        -1,
+	OWHILE:       -1,
 	OGOTO:       -1,
 	OIF:         -1,
 	OLABEL:      -1,
@@ -294,7 +296,7 @@ var OpPrec = []int{
 // StmtWithInit reports whether op is a statement with an explicit init list.
 func StmtWithInit(op Op) bool {
 	switch op {
-	case OIF, OFOR, OSWITCH:
+	case OIF, OFOR, OSWITCH, OWHILE:
 		return true
 	}
 	return false
@@ -432,6 +434,18 @@ func stmtFmt(n Node, s fmt.State) {
 			fmt.Fprint(s, ";")
 		}
 
+		fmt.Fprintf(s, " { %v }", n.Body)
+	
+	case OWHILE:
+		n := n.(*WhileStmt)
+		if !exportFormat {
+			fmt.Fprintf(s, "while loop")
+			break
+		}
+		fmt.Fprint(s, "while")
+		if n.Cond != nil {
+			fmt.Fprintf(s, " %v", n.Cond)
+		}
 		fmt.Fprintf(s, " { %v }", n.Body)
 
 	case ORANGE:

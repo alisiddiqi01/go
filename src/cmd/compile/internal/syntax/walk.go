@@ -272,6 +272,10 @@ func (w walker) node(n Node) {
 			w.node(n.Post)
 		}
 		w.node(n.Body)
+	
+	case *WhileStmt:
+		w.node(n.Cond)
+		w.node(n.Body)
 
 	case *SwitchStmt:
 		if n.Init != nil {

@@ -126,6 +126,10 @@ func walkStmt(n ir.Node) ir.Node {
 	case ir.OFOR:
 		n := n.(*ir.ForStmt)
 		return walkFor(n)
+	
+	case ir.OWHILE:
+		n := n.(*ir.WhileStmt)
+		return walkWhile(n)
 
 	case ir.OIF:
 		n := n.(*ir.IfStmt)
@@ -187,6 +191,12 @@ func walkFor(n *ir.ForStmt) ir.Node {
 	}
 
 	n.Post = walkStmt(n.Post)
+	walkStmtList(n.Body)
+	return n
+}
+
+func walkWhile(n *ir.WhileStmt) ir.Node {
+	n.Cond = walkExpr(n.Cond, n.PtrInit())
 	walkStmtList(n.Body)
 	return n
 }

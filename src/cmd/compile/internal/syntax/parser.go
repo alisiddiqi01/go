@@ -317,6 +317,7 @@ const stopset uint64 = 1<<_Break |
 	1<<_Defer |
 	1<<_Fallthrough |
 	1<<_For |
+	1<<_While |
 	1<<_Go |
 	1<<_Goto |
 	1<<_If |
@@ -2292,12 +2293,29 @@ func (p *parser) forStmt() Stmt {
 	return s
 }
 
+func (p *parser) whileStmt() Stmt {
+	if trace {
+		defer p.trace("whileStmt")()
+	}
+
+	s := new(WhileStmt)
+	s.pos = p.pos()
+
+	_, s.Cond, _ = p.header(_While)
+	s.Body = p.blockStmt("while clause")
+
+	return s
+}
+
 func (p *parser) header(keyword token) (init SimpleStmt, cond Expr, post SimpleStmt) {
 	p.want(keyword)
 
 	if p.tok == _Lbrace {
 		if keyword == _If {
 			p.syntaxError("missing condition in if statement")
+			cond = p.badExpr()
+		} else if keyword == _While {
+			p.syntaxError("missing condition in while statement")
 			cond = p.badExpr()
 		}
 		return
@@ -2352,6 +2370,14 @@ func (p *parser) header(keyword token) (init SimpleStmt, cond Expr, post SimpleS
 					p.syntaxErrorAt(a.Pos(), "cannot declare in post statement of for loop")
 				}
 			}
+		} else if keyword == _While {
+			if p.tok != _Semi {
+				if p.tok == _Lbrace {
+					p.syntaxError("expected while loop condition")
+					goto done
+				}
+				condStmt = p.simpleStmt(nil, 0 /* range not permitted */)
+			}
 		} else if p.tok != _Lbrace {
 			condStmt = p.simpleStmt(nil, keyword)
 		}
@@ -2369,6 +2395,15 @@ done:
 				p.syntaxErrorAt(semi.pos, fmt.Sprintf("unexpected %s, expected { after if clause", semi.lit))
 			} else {
 				p.syntaxErrorAt(semi.pos, "missing condition in if statement")
+			}
+			b := new(BadExpr)
+			b.pos = semi.pos
+			cond = b
+		} else if keyword == _While && semi.pos.IsKnown() {
+			if semi.lit != "semicolon" {
+				p.syntaxErrorAt(semi.pos, fmt.Sprintf("unexpected %s, expected { after while clause", semi.lit))
+			} else {
+				p.syntaxErrorAt(semi.pos, "missing condition in while loop")
 			}
 			b := new(BadExpr)
 			b.pos = semi.pos
@@ -2596,6 +2631,9 @@ func (p *parser) stmtOrNil() Stmt {
 
 	case _For:
 		return p.forStmt()
+	
+	case _While:
+		return p.whileStmt()
 
 	case _Switch:
 		return p.switchStmt()

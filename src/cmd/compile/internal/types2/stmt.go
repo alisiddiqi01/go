@@ -666,6 +666,21 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 			check.use(s.Lhs) // avoid follow-up errors
 		}
 		check.stmt(inner, s.Body)
+	
+	case *syntax.WhileStmt:
+		//inner |= breakOk | continueOk
+
+		check.openScope(s, "while")
+		defer check.closeScope()
+
+		if s.Cond != nil {
+			var x operand
+			check.expr(nil, &x, s.Cond)
+			if x.mode != invalid && !allBoolean(x.typ) {
+				check.error(s.Cond, InvalidCond, "non-boolean condition in while statement")
+			}
+		}
+		check.stmt(inner, s.Body)
 
 	default:
 		check.error(s, InvalidSyntaxTree, "invalid statement")

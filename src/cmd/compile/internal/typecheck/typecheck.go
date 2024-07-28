@@ -549,6 +549,10 @@ func typecheck1(n ir.Node, top int) ir.Node {
 	case ir.OFOR:
 		n := n.(*ir.ForStmt)
 		return tcFor(n)
+	
+	case ir.OWHILE:
+		n := n.(*ir.WhileStmt)
+		return tcWhile(n)
 
 	case ir.OIF:
 		n := n.(*ir.IfStmt)

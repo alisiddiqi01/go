@@ -214,6 +214,20 @@ func NewCommStmt(pos src.XPos, comm Node, body []Node) *CommClause {
 	return n
 }
 
+type WhileStmt struct {
+	miniStmt
+	Cond         Node
+	Body         Nodes
+}
+
+func NewWhileStmt (pos src.XPos, cond Node, body []Node) *WhileStmt {
+	n := &WhileStmt{Cond: cond}
+	n.pos = pos
+	n.op = OWHILE
+	n.Body = body
+	return n
+}
+
 // A ForStmt is a non-range for loop: for Init; Cond; Post { Body }
 type ForStmt struct {
 	miniStmt

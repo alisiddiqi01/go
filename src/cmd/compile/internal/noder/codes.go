@@ -26,6 +26,7 @@ const (
 	stmtReturn
 	stmtIf
 	stmtFor
+	stmtWhile
 	stmtSwitch
 	stmtSelect
 )

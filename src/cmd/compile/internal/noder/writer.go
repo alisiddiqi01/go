@@ -1324,6 +1324,10 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 	case *syntax.ForStmt:
 		w.Code(stmtFor)
 		w.forStmt(stmt)
+	
+	case *syntax.WhileStmt:
+		w.Code(stmtWhile)
+		w.whileStmt(stmt)
 
 	case *syntax.IfStmt:
 		w.Code(stmtIf)
@@ -1512,6 +1516,17 @@ func (w *writer) forStmt(stmt *syntax.ForStmt) {
 
 	w.blockStmt(stmt.Body)
 	w.Bool(w.distinctVars(stmt))
+	w.closeAnotherScope()
+}
+
+func (w *writer) whileStmt(stmt *syntax.WhileStmt) {
+	w.Sync(pkgbits.SyncWhileStmt)
+	w.openScope(stmt.Pos())
+
+	w.pos(stmt)
+	w.optExpr(stmt.Cond)
+	w.blockStmt(stmt.Body)
+	w.Bool(base.Debug.LoopVar > 0)
 	w.closeAnotherScope()
 }
 

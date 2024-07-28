@@ -839,6 +839,14 @@ func (o *orderState) stmt(n ir.Node) {
 		n.Post = orderStmtInPlace(n.Post, o.free)
 		o.out = append(o.out, n)
 		o.popTemp(t)
+	
+	case ir.OWHILE:
+		n := n.(*ir.WhileStmt)
+		t := o.markTemp()
+		n.Cond = o.exprInPlace(n.Cond)
+		orderBlock(&n.Body, o.free)
+		o.out = append(o.out, n)
+		o.popTemp(t)
 
 	// Clean temporaries from condition at
 	// beginning of both branches.

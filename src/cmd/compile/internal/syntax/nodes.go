@@ -418,6 +418,13 @@ type (
 		stmt
 	}
 
+	WhileStmt struct {
+		Init SimpleStmt
+		Cond Expr
+		Body *BlockStmt
+		stmt
+	}
+
 	SwitchStmt struct {
 		Init   SimpleStmt
 		Tag    Expr // incl. *TypeSwitchGuard
